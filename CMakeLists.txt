@@ -1,0 +1,104 @@
+cmake_minimum_required(VERSION 3.11)
+
+project(base_raylib_project
+        VERSION 1.0
+        DESCRIPTION "A base project for raylib usage"
+        LANGUAGES CXX C)
+
+set(CMAKE_CXX_STANDARD 17)
+
+# Avoid extensions
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
+
+# Default build type if not specified
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
+# Add the cmake/ local folder
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+# Prepare for LTO
+include(CheckIPOSupported)
+check_ipo_supported(RESULT LTO_result OUTPUT output)
+
+if(NOT LTO_result)
+    message(WARNING "IPO is not supported: ${output}")
+endif()
+
+# RayLib
+
+cmake_policy(SET CMP0072 NEW)
+set(OpenGL_GL_PREFERENCE "GLVND") # Set manually, even if the previous line should handle it...
+
+find_package(raylib 3.0 QUIET)
+
+if(NOT raylib_FOUND)
+    include(FetchContent)
+
+    FetchContent_Declare(
+            raylib
+            GIT_REPOSITORY https://github.com/raysan5/raylib.git
+            GIT_TAG 3.0.0
+    )
+
+    FetchContent_GetProperties(raylib)
+    if(NOT raylib_POPULATED) # Have we downloaded raylib yet?
+        set(FETCHCONTENT_QUIET NO)
+        FetchContent_Populate(raylib)
+
+        set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
+
+        # build raylib
+        add_subdirectory(${raylib_SOURCE_DIR} ${raylib_BINARY_DIR})
+    endif()
+endif()
+
+# GoogleTest
+
+find_package(googletest 1.8 QUIET)
+
+if(NOT googletest_FOUND)
+    FetchContent_Declare(
+            googletest
+            GIT_REPOSITORY https://github.com/google/googletest.git
+            GIT_TAG release-1.10.0
+    )
+
+    FetchContent_GetProperties(googletest)
+    if(NOT googletest_POPULATED)
+        FetchContent_Populate(googletest)
+        add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+    endif()
+endif()
+
+# Executable
+set(EXE_NAME "base_raylib_project")
+set(TEST_EXE_NAME ${EXE_NAME}_tests)
+
+add_executable(${EXE_NAME} src/main.cpp)
+set_target_properties(${EXE_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+target_link_libraries(${EXE_NAME} raylib)
+
+if(LTO_result AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
+    set_target_properties(${EXE_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+    message("IPO activated for ${EXE_NAME}")
+endif()
+
+# Tests for main project
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    include(CTest)
+    #    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+    #        add_subdirectory(tests)
+    #    endif()
+endif()
+
+# Add tests
+add_executable(${TEST_EXE_NAME} tests/main_test.cpp)
+target_link_libraries(${TEST_EXE_NAME} gtest)
