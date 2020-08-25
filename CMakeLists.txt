@@ -31,51 +31,37 @@ if(NOT LTO_result)
     message(WARNING "IPO is not supported: ${output}")
 endif()
 
-# RayLib
+# Submodules
+
+find_package(Git QUIET)
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    # Update submodules as needed
+    option(GIT_SUBMODULE "Check submodules during build" ON)
+
+    if(GIT_SUBMODULE)
+        message(STATUS "Submodule update")
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                RESULT_VARIABLE GIT_SUBMOD_RESULT)
+        if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+    endif()
+endif()
+    endif()
+
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/raylib/CMakeLists.txt")
+    message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
+endif()
+
+# RayLib & Google Test
 
 cmake_policy(SET CMP0072 NEW)
 set(OpenGL_GL_PREFERENCE "GLVND") # Set manually, even if the previous line should handle it...
 
-find_package(raylib 3.0 QUIET)
+add_subdirectory(extern/raylib)
+add_subdirectory(extern/googletest)
 
-if(NOT raylib_FOUND)
-    include(FetchContent)
-
-    FetchContent_Declare(
-            raylib
-            GIT_REPOSITORY https://github.com/raysan5/raylib.git
-            GIT_TAG 3.0.0
-    )
-
-    FetchContent_GetProperties(raylib)
-    if(NOT raylib_POPULATED) # Have we downloaded raylib yet?
-        set(FETCHCONTENT_QUIET NO)
-        FetchContent_Populate(raylib)
-
-        set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
-
-        # build raylib
-        add_subdirectory(${raylib_SOURCE_DIR} ${raylib_BINARY_DIR})
-    endif()
-endif()
-
-# GoogleTest
-
-find_package(googletest 1.8 QUIET)
-
-if(NOT googletest_FOUND)
-    FetchContent_Declare(
-            googletest
-            GIT_REPOSITORY https://github.com/google/googletest.git
-            GIT_TAG release-1.10.0
-    )
-
-    FetchContent_GetProperties(googletest)
-    if(NOT googletest_POPULATED)
-        FetchContent_Populate(googletest)
-        add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
-    endif()
-endif()
+# find_package(googletest 1.8)
 
 # Executable
 set(EXE_NAME "base_raylib_project")

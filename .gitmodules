@@ -1,0 +1,6 @@
+[submodule "extern/raylib"]
+	path = extern/raylib
+	url = ../../raysan5/raylib/
+[submodule "extern/googletest"]
+	path = extern/googletest
+	url = ../../google/googletest/
