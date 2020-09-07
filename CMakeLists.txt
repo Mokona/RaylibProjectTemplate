@@ -54,14 +54,12 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/raylib/CMakeLists.txt")
 endif()
 
 # RayLib & Google Test
-
 cmake_policy(SET CMP0072 NEW)
 set(OpenGL_GL_PREFERENCE "GLVND") # Set manually, even if the previous line should handle it...
-
 add_subdirectory(extern/raylib)
-add_subdirectory(extern/googletest)
 
-# find_package(googletest 1.8)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+add_subdirectory(extern/googletest)
 
 # Executable
 set(EXE_NAME "base_raylib_project")
