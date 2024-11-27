@@ -90,5 +90,5 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 # Add tests
-add_executable(${TEST_EXE_NAME} tests/main_test.cpp)
+add_executable(${TEST_EXE_NAME} tests/main_test.cpp ${MAIN_FILE_LIST})
 target_link_libraries(${TEST_EXE_NAME} gtest)

@@ -1,6 +1,16 @@
-Prerequisites:
+# Template objective
+
+This is a template project for a program that uses the raylib library.
+
+The cmake file is configured to also use googletest for unit testing.
+
+The project shares the same sources files between the main program and the unit tests, except
+for the main.cpp and the test_main.cpp files, which are the entry points that differ between
+the main program and the unit tests program.
+
+# Prerequisites:
    
-Linux:
+## Linux
 
 * cmake 3.11+
 * Development tools:
@@ -15,9 +25,11 @@ Linux:
     
       ```sudo dnf install alsa-lib-devel mesa-libGL-devel libX11-devel libXrandr-devel libXi-devel libXcursor-devel libXinerama-devel```
 
-* NOTE: Only tested on Ubuntu 18.04
- 
-Windows:
+* NOTE: Only tested on Ubuntu 22.04
+
+## Windows
+
+(not tested recently)
 
 * A compiler
     * VS2019
@@ -25,4 +37,4 @@ Windows:
 * cmake 3.11+
 * git
 
-* NOTE: Only tested on Windows 10
+* NOTE: (was) Only tested on Windows 10
